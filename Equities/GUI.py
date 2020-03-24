@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter.filedialog import askopenfilename
+from tkinter import filedialog
 
 text_color = 'purple'
 button_color = 'black'
@@ -35,8 +37,12 @@ class Helios:
         self.newWindow = tk.Toplevel(self.master)
         self.app = Equities(self.newWindow)
         
+    
+        
     def close_app(self):
         self.master.destroy()
+        
+
 
     
 
@@ -44,11 +50,26 @@ class Equities:
     def __init__(self, master):
         self.master = master
         self.frame = tk.Frame(self.master)
-     
-       
+        self.import_securities = HB(self.frame, text = 'Excel Import', width = 25, command = self.select_file, fg = text_color, bg= button_color).pack()
+
+      
+        self.home = HB(self.frame, text = 'Return Home', width = 25, command = self.return_home, fg = text_color, bg= button_color).pack()
+        self.quit = HB(self.frame, text = 'Close Application', width = 25, command = self.close_app, fg = text_color, bg= button_color).pack()
+        self.frame.pack()
+        
+    def return_home(self):
+        self.master.show()
+        self.newWindow = tk.Toplevel(self.master)
+        self.app = Helios(self.newWindow)
         
     def close_app(self):
         self.master.destroy()
+        
+    def select_file(self):
+        self.master.withdraw() 
+        self.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = [("Excel File","*.xlsx"),("Macro-Enabled Excel","*.xlsm*"),("Excel Binary File","*.xlsb*")])
+        
+     
 
 def main(): 
     root = tk.Tk()

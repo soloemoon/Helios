@@ -5,7 +5,6 @@ import numpy as np
 from json import loads
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
-from fbprophet import Prophet
 
 # Define tickers to analyze
 ticker = ['JBLU', 'AAPL']
@@ -109,14 +108,6 @@ for tick in ticker:
     ratios[tick]['Term Debt to Equity'] = ra('bs',tick,'Long-term debt') / ra('bs',tick,'Total shareholders equity')
     ratios[tick]['Debt to Tangible Assets'] = ra('bs',tick,'Long-term debt') / (ra('bs',tick,'Total assets') - ra('bs',tick,'Goodwill and Intangible Assets' ) )
 
-# Growth Rates
-for tick in ticker:
-    bs_growth_rates[tick] = balance_sheets[tick].pct_change(axis='columns')
-    bs_growth_rates[tick] = bs_growth_rates[tick].fillna(0)
-    
-    is_growth_rates[tick] = income_statements[tick].pct_change(axis='columns')
-    is_growth_rates[tick] = is_growth_rates[tick].fillna(0)
-    
 # Common size financial statements
 for tick in ticker:
     cols = balance_sheets[tick].columns
@@ -137,7 +128,7 @@ for tick in ticker:
     discretionary_accrual_train[tick] = discretionary_accrual_train[tick].dropna()
     
     regression = LinearRegression().fit(discretionary_accrual_train[tick][['Cash Revenue Growth', 'PP&E']] , discretionary_accrual_train[tick]['Accruals'] )
-    print(str(tick) + regression.score(discretionary_accrual_train[tick][['Cash Revenue Growth', 'PP&E']] , discretionary_accrual_train[tick]['Accruals']))
+    print(regression.score(discretionary_accrual_train[tick][['Cash Revenue Growth', 'PP&E']] , discretionary_accrual_train[tick]['Accruals']))
     
     discretionary_accrual_estimate[tick] = discretionary_accrual[tick]['Accruals'].head(4) - (regression.intercept_ + (regression.coef_[0] * discretionary_accrual[tick]['Cash Revenue Growth'].head(4)) + ( regression.coef_[1] * discretionary_accrual[tick]['PP&E'].head(4)))
     discretionary_accrual_estimate[tick]['Max'] = max(discretionary_accrual_train[tick]['Accruals'] - (regression.intercept_ + (regression.coef_[0] * discretionary_accrual_train[tick]['Cash Revenue Growth']) + ( regression.coef_[1] * discretionary_accrual_train[tick]['PP&E'])))
@@ -154,7 +145,7 @@ for tick in ticker:
     discretionary_expenditures_train[tick] = discretionary_expenditures_train[tick].dropna()
     
     regression = LinearRegression().fit(discretionary_expenditures_train[tick][['Revenue', 'PriorRevenue']] , discretionary_accrual_train[tick]['R&D'] )
-    print(str(tick) + regression.score(discretionary_expenditures_train[tick][['Revenue', 'PriorRevenue']] , discretionary_accrual_train[tick]['R&D']))
+    print(regression.score(discretionary_expenditures_train[tick][['Revenue', 'PriorRevenue']] , discretionary_accrual_train[tick]['R&D']))
     
     discretionary_expenditures_estimate[tick] = discretionary_expenditures[tick]['R&D'].head(4) - (regression.intercept_ + (regression.coef_[0] * discretionary_expenditures[tick]['Revenue'].head(4))  + (regression.coef_[1] * discretionary_accrual[tick]['PriorRevenue'].head(4)) )
     discretionary_expenditures_estimate[tick]['Max'] = max(discretionary_expenditures_train[tick]['R&D'] - (regression.intercept_ + (regression.coef_[0] * discretionary_expenditures_train[tick]['Revenue']) + ( regression.coef_[1] * discretionary_accrual_train[tick]['PriorRevenue'])))
@@ -164,6 +155,8 @@ for tick in ticker:
 del [discretionary_accrual_train, discretionary_expenditures_train]
 
 # Forecast Financial Statements
-#grth = is_growth_rates['AAPL']
 
-
+# Calculate Growth Rates
+for tick in ticker:
+    is_growth_rates[tick] = income_statements[tick].apply(lambda x: (x /x.shift(-1)) - 1, axis=1)
+    bs_growth_rates[tick] = balance_sheets[tick].apply(lambda x: (x /x.shift(-1)) - 1, axis=1)

@@ -16,36 +16,10 @@ import keras.losses
 from keras.layers import Dense, Dropout
 from sklearn.metrics import r2_score
 
+import Technicals as tc
+
+
 # Define Functions
-
-def rsi(df, window):
-    delta = df.diff()
-    delta = delta[1:]
-    up, down = delta.copy(), delta.copy()
-    up[up < 0] = 0
-    down[down > 0 ] = 0
-    RSI =  100-100/(1+(+up.rolling(window).mean() / down.abs().rolling(window).mean()))
-    return(RSI)
-
-def ma(df, window_length):
-    ma = df.rolling(window = window_length).mean()
-    return(ma)
-
-def logreturn(df):
-    log = np.log(df).diff().cumsum()
-    return(log)
-
-def totalreturn(df):
-    total = 100 * (np.exp(logreturn(df))) - 1
-    return(total)
-
-def bollingerband(df, window, sd):
-    mean = df.rolling(window).mean()
-    std = df.rolling(window).std()
-    upperband = mean + (std * sd)
-    lowerband = mean - (std * sd)
-    bband = pd.DataFrame({'Mean':mean, 'Upper':upperband,'Lower':lowerband})
-    return(bband)
 
 # Penalizies ML model for getting predicted direction of stock movements wrong
 def lossfunction(y_true, y_pred):
@@ -96,12 +70,12 @@ nn_test_pred = {name: name for name in tickers}
 fig, (ax1, ax2) = plt.subplots(2,1,figsize=(16,9))
 # Plot cumulative log returns
 for tick in tickers:
-    ax1.plot(logreturn(prices['Adj Close'][tick]), label = str(tick))
+    ax1.plot(tc.logreturn(prices['Adj Close'][tick]), label = str(tick))
     ax1.set_ylabel('Cumulative Log Returns')
     ax1.legend()
 # Plot Total Return
 for tick in tickers:
-    ax2.plot(totalreturn(prices['Adj Close'][tick]),label = str(tick))
+    ax2.plot(tc.totalreturn(prices['Adj Close'][tick]),label = str(tick))
     ax2.set_ylabel('Total relative returns (%')
     ax2.legend(loc='best')
 plt.show()
@@ -111,8 +85,8 @@ for tick in tickers:
     #---------- Simple Moving Averages --------#
     plt.subplots(figsize =(16,9))
     plt.plot(prices['Adj Close'][tick], label = 'Closing Price')
-    plt.plot(ma(prices['Adj Close'][tick], 20), label = '20 day SMA')
-    plt.plot(ma(prices['Adj Close'][tick],100), label = '100 day SMA')
+    plt.plot(tc.ma(prices['Adj Close'][tick], 20), label = '20 day SMA')
+    plt.plot(tc.ma(prices['Adj Close'][tick],100), label = '100 day SMA')
     plt.title(str(tick) + ' Simple Moving Averages')
     plt.legend()
     plt.ylabel('Adjusted Closing Price')
@@ -125,7 +99,7 @@ for tick in tickers:
     plt.show()
     
     #------ RSI -------#
-    plt.plot(rsi(prices['Adj Close'][tick], 14).tail(14))
+    plt.plot(tc.rsi(prices['Adj Close'][tick], 14).tail(14))
     plt.title(str(tick) + ' RSI')
     plt.show()
     
@@ -138,7 +112,7 @@ for tick in tickers:
     plt.show()
     
     #----- Bollinger Bands------#
-    bband[tick] = bollingerband(prices['Adj Close'][tick],20, 2)
+    bband[tick] = tc.bollingerband(prices['Adj Close'][tick],20, 2)
     # Create Bollinger Band Plot
     fig = plt.figure(figsize=(12,6))
     ax = fig.add_subplot(111)
@@ -154,8 +128,8 @@ for tick in tickers:
     # Generate moving averages and RSIs for range of days
 for tick in tickers:
     for n in [14,30,50,200]:
-        analysis[tick]['ma' + str(n)] = ma(prices['Adj Close'][tick],n)
-        analysis[tick]['rsi' + str(n)] = rsi(prices['Adj Close'][tick],n)
+        analysis[tick]['ma' + str(n)] = tc.ma(prices['Adj Close'][tick],n)
+        analysis[tick]['rsi' + str(n)] = tc.rsi(prices['Adj Close'][tick],n)
 
 # Plot features and Targets
 for tick in tickers:
@@ -164,7 +138,7 @@ for tick in tickers:
     features[tick].rename(columns={features[tick].columns[0]: "10D Return" }, inplace = True)
     # Add volumes to features
     features[tick]['Volume 1D Pct'] = prices['Volume'][tick].pct_change()
-    features[tick]['Volume 1D Pct MA'] = ma(prices['Volume'][tick].pct_change(),5)
+    features[tick]['Volume 1D Pct MA'] = tc.ma(prices['Volume'][tick].pct_change(),5)
     
     features[tick] = features[tick].dropna()
     
