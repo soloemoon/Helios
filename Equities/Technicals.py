@@ -29,3 +29,8 @@ def bollingerband(df, window, sd):
     lowerband = mean - (std * sd)
     bband = pd.DataFrame({'Mean':mean, 'Upper':upperband,'Lower':lowerband})
     return(bband)
+
+def ewm(df, window_length):
+    ewm = df.ewm(span = window_length).mean()
+    return(ewm)
+    

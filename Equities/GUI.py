@@ -1,7 +1,10 @@
+from tkinter import * 
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import filedialog
+import pandas as pd
+import numpy as np
 
 text_color = 'purple'
 button_color = 'black'
@@ -29,6 +32,7 @@ class Helios:
         #self.bonds = tk.Button(self.frame, text = 'Bonds', width = 25, command = self.new_window).pack()
         #self.options = tk.Button(self.frame, text = 'Options', width = 25, command = self.new_window).pack()
         #self.options = tk.Button(self.frame, text = 'Options', width = 25, command = self.new_window).pack()
+       
         self.frame.pack()
         
     # Page Navigation
@@ -36,8 +40,6 @@ class Helios:
         self.master.withdraw()
         self.newWindow = tk.Toplevel(self.master)
         self.app = Equities(self.newWindow)
-        
-    
         
     def close_app(self):
         self.master.destroy()
@@ -50,8 +52,11 @@ class Equities:
     def __init__(self, master):
         self.master = master
         self.frame = tk.Frame(self.master)
+        
+        self.import_text = Label(self,text ="Excel Import").pack()
+        
         self.import_securities = HB(self.frame, text = 'Excel Import', width = 25, command = self.select_file, fg = text_color, bg= button_color).pack()
-
+        
       
         self.home = HB(self.frame, text = 'Return Home', width = 25, command = self.return_home, fg = text_color, bg= button_color).pack()
         self.quit = HB(self.frame, text = 'Close Application', width = 25, command = self.close_app, fg = text_color, bg= button_color).pack()
@@ -66,14 +71,47 @@ class Equities:
         self.master.destroy()
         
     def select_file(self):
-        self.master.withdraw() 
+        
         self.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = [("Excel File","*.xlsx"),("Macro-Enabled Excel","*.xlsm*"),("Excel Binary File","*.xlsb*")])
+        excel_file = pd.read_excel(self.filename)
+        
+        return(excel_file)
+        
         
      
 
 def main(): 
     root = tk.Tk()
+    root.geometry("500x500")
     root.title('Helios Analytics')
+    
+ # Create Toolbar
+    menubar= tk.Menu(root)
+    
+    filemenu = tk.Menu(menubar,tearoff=0)
+    filemenu.add_command(label="New", command=root.destroy)
+    filemenu.add_command(label="Open", command=root.destroy)
+    menubar.add_cascade(label="File", menu=filemenu)
+
+    equitymenu = tk.Menu(menubar,tearoff=0)
+    equitymenu.add_command(label="Undo", command=root.destroy)
+    menubar.add_cascade(label="Equities", menu=equitymenu)
+
+    bondmenu = tk.Menu(menubar,tearoff=0)
+    bondmenu.add_command(label="Help",command=root.destroy)
+    menubar.add_cascade(label="Bonds",menu=bondmenu)
+
+    optionmenu = tk.Menu(menubar,tearoff=0)
+    optionmenu.add_command(label="Help",command=root.destroy)
+    menubar.add_cascade(label="Bonds",menu=optionmenu)
+    
+    helpmenu = tk.Menu(menubar,tearoff=0)
+    helpmenu.add_command(label="Help",command=root.destroy)
+    menubar.add_cascade(label="Help",menu=helpmenu)
+    
+    root.config(menu=menubar)
+
+
     app = Helios(root)
     root.mainloop()
 

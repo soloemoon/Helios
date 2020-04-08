@@ -15,6 +15,9 @@ import tensorflow as tf
 import keras.losses
 from keras.layers import Dense, Dropout
 from sklearn.metrics import r2_score
+from scipy import stats
+from scipy.stats import probplot
+
 
 import Technicals as tc
 
@@ -73,6 +76,7 @@ for tick in tickers:
     ax1.plot(tc.logreturn(prices['Adj Close'][tick]), label = str(tick))
     ax1.set_ylabel('Cumulative Log Returns')
     ax1.legend()
+    
 # Plot Total Return
 for tick in tickers:
     ax2.plot(tc.totalreturn(prices['Adj Close'][tick]),label = str(tick))
@@ -92,10 +96,22 @@ for tick in tickers:
     plt.ylabel('Adjusted Closing Price')
     plt.show()
     
+    #--------- Exponential Moving Averages -------#
+    plt.plot(tc.ewm(prices['Adj Close'],5), color = 'red')
+    plt.plot(tc.ewm( prices['Adj Close'],30), color = 'blue')
+    plt.legend()
+    plt.show()
+    
     #------- Histogram ---------#
     plt.hist(prices['Adj Close'][tick].pct_change(), bins = 50)
     plt.title(tick)
     plt.xlabel('Adjusted Close 1 Day % Chg')
+    plt.show()
+    
+    #----- Quantile Polot -----#
+    figure = plt.figure()
+    ax = figure.add_subplot(111)
+    stats.probplot(returns[tick], dist='norm', plot=ax)
     plt.show()
     
     #------ RSI -------#
