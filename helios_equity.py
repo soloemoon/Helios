@@ -50,11 +50,15 @@ class Technicals:
         return logr
     
     def bollinger_band(self):
-        mean = self.df.rolling(self.window).mean()
-        sd = self.df.rolling(self.window).std()
-        upperband = mean + (sd * self.standard_deviation)
-        lowerband = mean - (sd * self.standard_deviation)
-        bband = pd.DataFrame({'Mean':mean, 'Upper':upperband, 'Lower':lowerband})
+        tickers = [col for col in self.df.columns]
+        bband = {name: name for name in tickers}
+        
+        for tick in tickers:
+            mean = self.df[tick].rolling(self.window).mean()
+            sd = self.df[tick].rolling(self.window).std()
+            upperband = mean + (sd * self.standard_deviation)
+            lowerband = mean - (sd * self.standard_deviation)
+            bband[tick] = pd.DataFrame({'Mean':mean, 'Upper':upperband, 'Lower':lowerband})
         return bband
     
     def exponential_average(self):
